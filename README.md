@@ -9,7 +9,7 @@ continuar passando.
 
 ## Requisitos
 
-- PHP 8.3 ou superior
+- PHP 8.4.1 ou superior
 - Composer
 
 ## Instalação e testes
