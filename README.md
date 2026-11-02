@@ -25,6 +25,21 @@ Para executar somente os testes unitários:
 php artisan test --testsuite=Unit
 ```
 
+Outras opções:
+
+| Comando | Para que serve |
+| --- | --- |
+| `php artisan test` | Executa toda a suíte de testes. |
+| `php artisan test tests/Unit/ServicoDeCupomTest.php` | Executa um arquivo de teste específico. |
+| `php artisan test --filter=aplica_desconto_percentual` | Executa testes cujo nome corresponde ao filtro. |
+| `php artisan test --testsuite=Unit` | Executa apenas a suíte Unit (use `Feature` para testes de funcionalidade). |
+| `php artisan test --stop-on-failure` | Interrompe a execução ao primeiro teste que falhar. |
+| `php artisan test --coverage` | Gera relatório de cobertura de código (requer driver de cobertura, como Xdebug ou PCOV). |
+| `vendor/bin/phpunit` | Executa o PHPUnit diretamente, sem a camada de saída do Artisan. |
+
+> **Dica:** acrescente `--help` a `php artisan test` para consultar as opções disponíveis na versão instalada do Laravel.
+
+
 ## Regras do cupom
 
 O serviço verifica, nesta ordem, expiração, limite de usos e gasto mínimo.
@@ -55,3 +70,15 @@ Os testes ficam em [`tests/Unit/ServicoDeCupomTest.php`](tests/Unit/ServicoDeCup
 
 O Data Provider executa o mesmo teste para cada combinação. Por isso, os 11
 métodos de teste resultam em 15 execuções no total.
+
+## Teste de feature do checkout
+
+O teste fica em [`tests/Feature/CheckoutTest.php`](tests/Feature/CheckoutTest.php).
+
+- `test_envia_total_com_desconto_para_a_api_de_pagamento`: cria um cupom de 10%,
+  aplica o desconto a um subtotal de R$ 100,00 e usa `Http::fake()` para simular
+  a API externa de pagamento. Verifica que o checkout foi aprovado e que uma
+  única cobrança foi enviada com o código do cupom e o total de R$ 90,00.
+
+Esse teste exercita o serviço de cupom junto com o checkout, sem fazer uma
+conexão real à internet nem persistir dados em banco.
