@@ -19,24 +19,65 @@ class ServicoDeCupom
      */
     public function aplicar(Cupom $cupom, float $subtotal): float
     {
+        $this->validarExpiracao($cupom);
+        $this->validarLimiteDeUsos($cupom);
+        $this->validarGastoMinimo($cupom, $subtotal);
+
+        return $this->calcularTotalComDesconto($cupom, $subtotal);
+    }
+
+    /**
+     * Lança erro se o instante atual for posterior à expiração.
+     */
+    private function validarExpiracao(Cupom $cupom): void
+    {
+        // A igualdade ainda é válida; o cupom expira somente depois desse instante.
         if (Carbon::now()->greaterThan($cupom->expiraEm)) {
             throw new CupomExpiradoException;
         }
+    }
 
-        if ($cupom->maximoDeUsos !== null && $cupom->vezesUsado >= $cupom->maximoDeUsos) {
+    /**
+     * Lança erro se o cupom já atingiu o limite de usos definido.
+     */
+    private function validarLimiteDeUsos(Cupom $cupom): void
+    {
+        if ($cupom->maximoDeUsos === null) {
+            return;
+        }
+
+        if ($cupom->vezesUsado >= $cupom->maximoDeUsos) {
             throw new CupomEsgotadoException;
         }
+    }
 
-        if ($cupom->gastoMinimo !== null && $subtotal < $cupom->gastoMinimo) {
-            throw new GastoMinimoNaoAtingidoException($cupom->gastoMinimo);
+    /**
+     * Lança erro se o subtotal não alcançar o gasto mínimo do cupom.
+     */
+    private function validarGastoMinimo(Cupom $cupom, float $subtotal): void
+    {
+        if ($cupom->gastoMinimo === null) {
+            return;
         }
 
+        if ($subtotal < $cupom->gastoMinimo) {
+            throw new GastoMinimoNaoAtingidoException($cupom->gastoMinimo);
+        }
+    }
+
+    /**
+     * Calcula o total final, sem permitir resultado negativo.
+     */
+    private function calcularTotalComDesconto(Cupom $cupom, float $subtotal): float
+    {
         if ($cupom->tipo === TipoDeCupom::Percentual) {
             $valorDoDesconto = $subtotal * $cupom->valor / 100;
         } else {
             $valorDoDesconto = $cupom->valor;
         }
 
-        return round(max(0.0, $subtotal - $valorDoDesconto), 2);
+        $totalComDesconto = max(0.0, $subtotal - $valorDoDesconto);
+
+        return round($totalComDesconto, 2);
     }
 }

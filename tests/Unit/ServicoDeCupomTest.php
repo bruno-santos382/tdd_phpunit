@@ -42,13 +42,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_aplica_desconto_percentual(): void
     {
-        // Organizar: cupom de 10% e carrinho de R$ 100,00
+        // Arrange: cupom de 10% e carrinho de R$ 100,00
         $cupom = $this->criarCupom(tipo: TipoDeCupom::Percentual, valor: 10.0);
 
-        // Agir: aplica o cupom
+        // Act: aplica o cupom
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 100.0);
 
-        // Verificar: o total deve ser R$ 90,00
+        // Assert: o total deve ser R$ 90,00
         $this->assertSame(90.0, $totalComDesconto);
     }
 
@@ -57,13 +57,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_aplica_desconto_fixo(): void
     {
-        // Organizar: cupom fixo de R$ 15,00
+        // Arrange: cupom fixo de R$ 15,00
         $cupom = $this->criarCupom(tipo: TipoDeCupom::Fixo, valor: 15.0);
 
-        // Agir: aplica o cupom sobre R$ 100,00
+        // Act: aplica o cupom sobre R$ 100,00
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 100.0);
 
-        // Verificar: o total deve ser R$ 85,00
+        // Assert: o total deve ser R$ 85,00
         $this->assertSame(85.0, $totalComDesconto);
     }
 
@@ -72,10 +72,10 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_lanca_erro_quando_cupom_expirado(): void
     {
-        // Organizar: cupom expirado ontem
+        // Arrange: cupom expirado ontem
         $cupom = $this->criarCupom(expiraEm: Carbon::now()->subDay());
 
-        // Agir e verificar: a aplicação deve informar que expirou
+        // Agir e Assert: a aplicação deve informar que expirou
         $this->expectException(CupomExpiradoException::class);
         $this->servicoDeCupom->aplicar($cupom, 100.0);
     }
@@ -85,13 +85,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_cupom_ainda_vale_no_instante_da_expiracao(): void
     {
-        // Organizar: expiração no mesmo instante do relógio congelado
+        // Arrange: expiração no mesmo instante do relógio congelado
         $cupom = $this->criarCupom(expiraEm: Carbon::now());
 
-        // Agir: aplica o cupom no instante da expiração
+        // Act: aplica o cupom no instante da expiração
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 100.0);
 
-        // Verificar: o cupom ainda é válido e aplica 10%
+        // Assert: o cupom ainda é válido e aplica 10%
         $this->assertSame(90.0, $totalComDesconto);
     }
 
@@ -100,10 +100,10 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_lanca_erro_quando_gasto_minimo_nao_atingido(): void
     {
-        // Organizar: cupom exige gasto mínimo de R$ 50,00
+        // Arrange: cupom exige gasto mínimo de R$ 50,00
         $cupom = $this->criarCupom(gastoMinimo: 50.0);
 
-        // Agir e verificar: R$ 30,00 não atingem o mínimo
+        // Agir e Assert: R$ 30,00 não atingem o mínimo
         $this->expectException(GastoMinimoNaoAtingidoException::class);
         $this->servicoDeCupom->aplicar($cupom, 30.0);
     }
@@ -113,13 +113,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_aceita_subtotal_igual_ao_gasto_minimo(): void
     {
-        // Organizar: subtotal e gasto mínimo de R$ 50,00
+        // Arrange: subtotal e gasto mínimo de R$ 50,00
         $cupom = $this->criarCupom(gastoMinimo: 50.0);
 
-        // Agir: aplica o cupom no limite mínimo permitido
+        // Act: aplica o cupom no limite mínimo permitido
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 50.0);
 
-        // Verificar: o cupom é válido e desconta 10%
+        // Assert: o cupom é válido e desconta 10%
         $this->assertSame(45.0, $totalComDesconto);
     }
 
@@ -128,10 +128,10 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_lanca_erro_quando_limite_de_usos_atingido(): void
     {
-        // Organizar: o cupom já foi usado duas vezes de um máximo de duas
+        // Arrange: o cupom já foi usado duas vezes de um máximo de duas
         $cupom = $this->criarCupom(maximoDeUsos: 2, vezesUsado: 2);
 
-        // Agir e verificar: novas aplicações devem ser rejeitadas
+        // Agir e Assert: novas aplicações devem ser rejeitadas
         $this->expectException(CupomEsgotadoException::class);
         $this->servicoDeCupom->aplicar($cupom, 100.0);
     }
@@ -141,13 +141,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_cupom_sem_limite_de_usos_sempre_vale(): void
     {
-        // Organizar: sem limite definido e com 999 usos anteriores
+        // Arrange: sem limite definido e com 999 usos anteriores
         $cupom = $this->criarCupom(maximoDeUsos: null, vezesUsado: 999);
 
-        // Agir: aplica o cupom sem um limite de usos
+        // Act: aplica o cupom sem um limite de usos
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 100.0);
 
-        // Verificar: o cupom continua válido
+        // Assert: o cupom continua válido
         $this->assertSame(90.0, $totalComDesconto);
     }
 
@@ -156,13 +156,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_total_nunca_fica_negativo(): void
     {
-        // Organizar: desconto fixo de R$ 50,00 sobre carrinho de R$ 10,00
+        // Arrange: desconto fixo de R$ 50,00 sobre carrinho de R$ 10,00
         $cupom = $this->criarCupom(tipo: TipoDeCupom::Fixo, valor: 50.0);
 
-        // Agir: aplica o desconto maior que o subtotal
+        // Act: aplica o desconto maior que o subtotal
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 10.0);
 
-        // Verificar: o total mínimo é zero
+        // Assert: o total mínimo é zero
         $this->assertSame(0.0, $totalComDesconto);
     }
 
@@ -171,13 +171,13 @@ class ServicoDeCupomTest extends TestCase
      */
     public function test_arredonda_total_com_duas_casas_decimais(): void
     {
-        // Organizar: percentual com resultado de três casas decimais
+        // Arrange: percentual com resultado de três casas decimais
         $cupom = $this->criarCupom(tipo: TipoDeCupom::Percentual, valor: 12.345);
 
-        // Agir: aplica o desconto a R$ 100,00
+        // Act: aplica o desconto a R$ 100,00
         $totalComDesconto = $this->servicoDeCupom->aplicar($cupom, 100.0);
 
-        // Verificar: o resultado deve ser arredondado para R$ 87,66
+        // Assert: o resultado deve ser arredondado para R$ 87,66
         $this->assertSame(87.66, $totalComDesconto);
     }
 
@@ -191,13 +191,13 @@ class ServicoDeCupomTest extends TestCase
         float $subtotal,
         float $totalEsperado,
     ): void {
-        // Organizar: monta o cupom com o tipo e o valor deste cenário
+        // Arrange: monta o cupom com o tipo e o valor deste cenário
         $cupom = $this->criarCupom(tipo: $tipo, valor: $valorDoCupom);
 
-        // Agir: aplica o cupom ao subtotal do cenário
+        // Act: aplica o cupom ao subtotal do cenário
         $totalCalculado = $this->servicoDeCupom->aplicar($cupom, $subtotal);
 
-        // Verificar: o resultado corresponde ao valor esperado do cenário
+        // Assert: o resultado corresponde ao valor esperado do cenário
         $this->assertSame($totalEsperado, $totalCalculado);
     }
 
